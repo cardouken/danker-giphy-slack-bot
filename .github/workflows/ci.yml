@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        id: git_checkout
+
+      - name: Compile
+        run: ./gradlew build
+
+      - name: Build Docker Image
+        id: buildAndPushImage
+        uses: zenato/docker-action@master
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: cardouken/giphy-dank
+          tag: latest
+
+      - name: Deploy Docker image in EC2
+        uses: peterkimzz/aws-ssm-send-command@v1.1.1
+        id: ssm
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          instance-ids: ${{ secrets.INSTANCE_ID }}
+
+          working-directory: /home/ec2-user
+          command: docker rm -f $(docker ps -a -q);docker pull cardouken/giphy-dank:latest;docker run -d --name giphy --network host --env-file env.properties cardouken/giphy-dank:latest
+          comment: Downloaded latest image and deployed on EC2
