@@ -66,7 +66,7 @@ public class SlackService {
             case SEND:
                 break;
             case CANCEL:
-                slack.methods(SlackService.TOKEN).chatUpdate(ChatUpdateRequest.builder()..build());
+                break;
         }
 
     }
