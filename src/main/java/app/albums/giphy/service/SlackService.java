@@ -43,7 +43,7 @@ import java.util.Set;
 public class SlackService {
 
     private static final String BOT_TOKEN = System.getenv("SLACK_BOT_TOKEN");
-    private static final int SWITCHEROO_CHANCE = 50; // % chance of the gif being replaced
+    private static final int SWITCHEROO_CHANCE = 70; // % chance of the gif being replaced
     private static final List<String> TARGET_CHANNELS = List.of(
             "C04TY1NEN", // #general
             "C04TY1NEW", // #random
@@ -100,7 +100,7 @@ public class SlackService {
             List<LayoutBlock> message = constructMessage(userQueryResult.getQuery(), userQueryResult.getUrl(), MessageType.CHANNEL);
 
             final int luck = randomizer.nextInt(99);
-            final boolean switcheroo = (luck > SWITCHEROO_CHANCE) && (TARGET_CHANNELS.contains(event.getChannel().getId()) || TARGET_KEYWORDS.contains(userQueryResult.getQuery()));
+            final boolean switcheroo = (SWITCHEROO_CHANCE > luck) && (TARGET_CHANNELS.contains(event.getChannel().getId()) || TARGET_KEYWORDS.contains(userQueryResult.getQuery()));
             if (switcheroo) {
                 final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
                 final String replacementUrl = giphyClient.findRandomGifByQuery(replacementQuery);
@@ -179,7 +179,7 @@ public class SlackService {
                     .channel(channel)
                     .unfurlMedia(true)
                     .text("sample text")
-                    .username("Giphy")
+                    .username("giphy")
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
             );
         } catch (IOException | SlackApiException e) {
