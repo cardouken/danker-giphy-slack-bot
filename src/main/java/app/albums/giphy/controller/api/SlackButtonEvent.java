@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SlackButtonCommand {
+public class SlackButtonEvent {
 
     private String type;
     private String token;
@@ -23,15 +23,10 @@ public class SlackButtonCommand {
     @JsonProperty("callback_id")
     private String callbackId;
 
-    @JsonProperty("trigger_id")
-    private String triggerId;
-
     @JsonProperty("response_url")
     private String responseUrl;
 
     private List<Action> actions;
-
-    private Team team;
 
     private Channel channel;
 
@@ -41,7 +36,7 @@ public class SlackButtonCommand {
         return type;
     }
 
-    public SlackButtonCommand setType(String type) {
+    public SlackButtonEvent setType(String type) {
         this.type = type;
         return this;
     }
@@ -50,7 +45,7 @@ public class SlackButtonCommand {
         return token;
     }
 
-    public SlackButtonCommand setToken(String token) {
+    public SlackButtonEvent setToken(String token) {
         this.token = token;
         return this;
     }
@@ -59,7 +54,7 @@ public class SlackButtonCommand {
         return actionTs;
     }
 
-    public SlackButtonCommand setActionTs(String actionTs) {
+    public SlackButtonEvent setActionTs(String actionTs) {
         this.actionTs = actionTs;
         return this;
     }
@@ -68,7 +63,7 @@ public class SlackButtonCommand {
         return messageTs;
     }
 
-    public SlackButtonCommand setMessageTs(String messageTs) {
+    public SlackButtonEvent setMessageTs(String messageTs) {
         this.messageTs = messageTs;
         return this;
     }
@@ -77,7 +72,7 @@ public class SlackButtonCommand {
         return attachmentId;
     }
 
-    public SlackButtonCommand setAttachmentId(String attachmentId) {
+    public SlackButtonEvent setAttachmentId(String attachmentId) {
         this.attachmentId = attachmentId;
         return this;
     }
@@ -86,17 +81,8 @@ public class SlackButtonCommand {
         return callbackId;
     }
 
-    public SlackButtonCommand setCallbackId(String callbackId) {
+    public SlackButtonEvent setCallbackId(String callbackId) {
         this.callbackId = callbackId;
-        return this;
-    }
-
-    public String getTriggerId() {
-        return triggerId;
-    }
-
-    public SlackButtonCommand setTriggerId(String triggerId) {
-        this.triggerId = triggerId;
         return this;
     }
 
@@ -104,7 +90,7 @@ public class SlackButtonCommand {
         return responseUrl;
     }
 
-    public SlackButtonCommand setResponseUrl(String responseUrl) {
+    public SlackButtonEvent setResponseUrl(String responseUrl) {
         this.responseUrl = responseUrl;
         return this;
     }
@@ -113,17 +99,8 @@ public class SlackButtonCommand {
         return actions;
     }
 
-    public SlackButtonCommand setActions(List<Action> actions) {
+    public SlackButtonEvent setActions(List<Action> actions) {
         this.actions = actions;
-        return this;
-    }
-
-    public Team getTeam() {
-        return team;
-    }
-
-    public SlackButtonCommand setTeam(Team team) {
-        this.team = team;
         return this;
     }
 
@@ -131,7 +108,7 @@ public class SlackButtonCommand {
         return channel;
     }
 
-    public SlackButtonCommand setChannel(Channel channel) {
+    public SlackButtonEvent setChannel(Channel channel) {
         this.channel = channel;
         return this;
     }
@@ -140,7 +117,7 @@ public class SlackButtonCommand {
         return user;
     }
 
-    public SlackButtonCommand setUser(User user) {
+    public SlackButtonEvent setUser(User user) {
         this.user = user;
         return this;
     }
@@ -148,18 +125,8 @@ public class SlackButtonCommand {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Action {
 
-        private String name;
         private String value;
         private String type;
-
-        public String getName() {
-            return name;
-        }
-
-        public Action setName(String name) {
-            this.name = name;
-            return this;
-        }
 
         public String getValue() {
             return value;
@@ -176,31 +143,6 @@ public class SlackButtonCommand {
 
         public Action setType(String type) {
             this.type = type;
-            return this;
-        }
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Team {
-
-        private String id;
-        private String domain;
-
-        public String getId() {
-            return id;
-        }
-
-        public Team setId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public String getDomain() {
-            return domain;
-        }
-
-        public Team setDomain(String domain) {
-            this.domain = domain;
             return this;
         }
     }
