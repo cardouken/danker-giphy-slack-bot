@@ -2,12 +2,14 @@ package app.albums.giphy.service;
 
 import app.albums.giphy.config.util.JsonUtility;
 import app.albums.giphy.controller.api.SlackButtonEvent;
+import app.albums.giphy.controller.api.SlackListenerEvent;
 import app.albums.giphy.controller.api.SlackSlashEvent;
 import app.albums.giphy.enums.ActionType;
 import app.albums.giphy.enums.ActionValue;
 import app.albums.giphy.enums.MessageType;
 import app.albums.giphy.pojo.QueryUrlResult;
 import app.albums.giphy.rest.api.giphy.GiphyClient;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.block.ActionsBlock;
@@ -133,6 +135,18 @@ public class SlackService {
         postWebhook(responseUrl, ActionType.REPLACE_ORIGINAL, message);
     }
 
+    public void receiveEvent(SlackListenerEvent listenerEvent) {
+        final SlackListenerEvent.Event event = listenerEvent.getEvent();
+        if (!Objects.equals(event.getType(), "reaction_added")) {
+            return;
+        }
+
+        final SlackListenerEvent.Item item = event.getItem();
+        if (Objects.equals(event.getReaction(), "monkas")) {
+            deleteMessage(item.getChannel(), item.getTs());
+        }
+    }
+
     private void postWebhook(String responseUrl, ActionType action, List<LayoutBlock> message) {
         final Map<String, Object> body = new HashMap<>();
         body.put(action.name().toLowerCase(), "true");
@@ -166,11 +180,21 @@ public class SlackService {
                     .unfurlMedia(true)
                     .text("sample text")
                     .username("Giphy")
-                    .iconEmoji(":yep:")
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
             );
         } catch (IOException | SlackApiException e) {
             throw new RuntimeException("Slack API fucked up");
+        }
+    }
+
+    private void deleteMessage(String channelId, String ts) {
+        try {
+            slack.methods(SlackService.BOT_TOKEN).chatDelete(req -> req
+                    .channel(channelId)
+                    .ts(String.valueOf(ts))
+            );
+        } catch (IOException | SlackApiException e) {
+            throw new RuntimeException("Slack API fucked up or don't have enough permissions to delete the message");
         }
     }
 

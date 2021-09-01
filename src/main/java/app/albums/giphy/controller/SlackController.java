@@ -2,6 +2,7 @@ package app.albums.giphy.controller;
 
 import app.albums.giphy.config.util.JsonUtility;
 import app.albums.giphy.controller.api.SlackButtonEvent;
+import app.albums.giphy.controller.api.SlackListenerEvent;
 import app.albums.giphy.controller.api.SlackSlashEvent;
 import app.albums.giphy.service.SlackService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,12 +22,17 @@ public class SlackController {
     }
 
     @PostMapping(value = "/slack", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public void receiveEvent(@RequestBody SlackSlashEvent command) {
-        slackService.handleSlashEvent(command);
+    public void handleSlashEvent(@RequestBody SlackSlashEvent event) {
+        slackService.handleSlashEvent(event);
     }
 
     @PostMapping(value = "/button", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public void handleButtonEvent(@RequestParam String payload) throws JsonProcessingException {
         slackService.handleButtonEvent(JsonUtility.getObjectMapper().readValue(payload, SlackButtonEvent.class));
+    }
+
+    @PostMapping(value = "/event")
+    public void receiveEvent(@RequestBody SlackListenerEvent event) {
+        slackService.receiveEvent(event);
     }
 }
