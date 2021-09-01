@@ -11,11 +11,14 @@ import app.albums.giphy.rest.api.giphy.GiphyClient;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.block.ActionsBlock;
+import com.slack.api.model.block.ContextBlock;
 import com.slack.api.model.block.ImageBlock;
 import com.slack.api.model.block.LayoutBlock;
+import com.slack.api.model.block.composition.MarkdownTextObject;
 import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
+import com.slack.api.model.block.element.ImageElement;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -114,6 +117,9 @@ public class SlackService {
                     .channel(channel)
                     .unfurlMedia(true)
                     .text("sample text")
+                    .username("Giphy")
+                    .iconUrl("https://ca.slack-edge.com/T04TY1N9S-UU2LZLZBN-f7c9fa36e6eb-512")
+                    .iconEmoji(":yep:")
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
             );
         } catch (IOException | SlackApiException e) {
@@ -156,6 +162,17 @@ public class SlackService {
             layoutBlocks.add(
                     ActionsBlock.builder()
                             .elements(blockElements)
+                            .build()
+            );
+        }
+
+        if (messageType == MessageType.CHANNEL) {
+            layoutBlocks.add(
+                    ContextBlock.builder()
+                            .elements(
+                                    List.of(
+                                            ImageElement.builder().imageUrl("https://uustal.ee/giphy.png").altText("Giphy").build(),
+                                            MarkdownTextObject.builder().text("Posted using /giphy").build()))
                             .build()
             );
         }
