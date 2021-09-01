@@ -9,7 +9,6 @@ import app.albums.giphy.enums.ActionValue;
 import app.albums.giphy.enums.MessageType;
 import app.albums.giphy.pojo.QueryUrlResult;
 import app.albums.giphy.rest.api.giphy.GiphyClient;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.model.block.ActionsBlock;
@@ -43,7 +42,7 @@ import java.util.Set;
 public class SlackService {
 
     private static final String BOT_TOKEN = System.getenv("SLACK_BOT_TOKEN");
-    private static final int SWITCHEROO_CHANCE = 75; // % chance of the gif being replaced
+    private static final int SWITCHEROO_CHANCE = 50; // % chance of the gif being replaced
     private static final List<String> TARGET_CHANNELS = List.of(
             "C04TY1NEN", // #general
             "C04TY1NEW", // #random
@@ -58,7 +57,12 @@ public class SlackService {
     private static final List<String> REPLACEMENT_KEYWORDS = List.of(
             "welcome to hell",
             "hasta la vista",
-            "filthy frank"
+            "teletubbies",
+            "what's up",
+            "how you doing",
+            "happy birthday",
+            "harold",
+            "trailer park boys"
     );
 
     private final Map<String, QueryUrlResult> userUrlMap = new HashMap<>();
@@ -99,7 +103,7 @@ public class SlackService {
             final QueryUrlResult userQueryResult = userUrlMap.get(userId);
             List<LayoutBlock> message = constructMessage(userQueryResult.getQuery(), userQueryResult.getUrl(), MessageType.CHANNEL);
 
-            final int luck = randomizer.nextInt(99);
+            final int luck = randomizer.nextInt(100);
             LogManager.getLogger(getClass()).info(luck);
             final boolean switcheroo = (SWITCHEROO_CHANCE > luck) && (TARGET_CHANNELS.contains(event.getChannel().getId()) || TARGET_KEYWORDS.contains(userQueryResult.getQuery()));
             if (switcheroo) {
