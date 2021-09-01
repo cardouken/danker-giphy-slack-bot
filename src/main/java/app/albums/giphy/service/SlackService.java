@@ -108,7 +108,7 @@ public class SlackService {
                 message = constructMessage(userQueryResult.getQuery(), replacementUrl, MessageType.CHANNEL);
 
                 LogManager.getLogger(getClass())
-                        .info(MessageFormat.format("Replacing keyword \"{0}\" with \"{1}\" because: luck: {2} < {3}, in target channel: {4}, target keyword: {5}",
+                        .info(MessageFormat.format("Replacing keyword \"{0}\" with \"{1}\" because: luck: {2} (under {3}), in target channel: {4}, target keyword: {5}",
                                         userQueryResult.getQuery(),
                                         replacementQuery,
                                         luck,
