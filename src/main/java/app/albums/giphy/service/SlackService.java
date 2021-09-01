@@ -19,6 +19,7 @@ import com.slack.api.model.block.composition.PlainTextObject;
 import com.slack.api.model.block.element.BlockElement;
 import com.slack.api.model.block.element.ButtonElement;
 import com.slack.api.model.block.element.ImageElement;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -26,32 +27,59 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 
 @Service
 public class SlackService {
 
     private static final String BOT_TOKEN = System.getenv("SLACK_BOT_TOKEN");
+    private static final int SWITCHEROO_CHANCE = 50; // % chance of the gif being replaced
+    private static final List<String> TARGET_CHANNELS = List.of(
+            "C04TY1NEN", // #general
+            "C04TY1NEW", // #random
+            "C02AXH70FGA" // #bot-playground
+    );
+    private static final Set<String> TARGET_KEYWORDS = Set.of(
+            "bienvenue",
+            "welcome",
+            "hello",
+            "bonjour"
+    );
+    private static final List<String> REPLACEMENT_KEYWORDS = List.of(
+            "welcome to hell",
+            "hasta la vista",
+            "filthy frank"
+    );
 
     private final Map<String, QueryUrlResult> userUrlMap = new HashMap<>();
     private final Slack slack;
     private final GiphyClient giphyClient;
     private final RestTemplate slackRestTemplate;
+    private final Random randomizer;
 
     public SlackService(GiphyClient giphyClient, RestTemplate slackRestTemplate) {
         this.giphyClient = giphyClient;
         this.slackRestTemplate = slackRestTemplate;
         this.slack = Slack.getInstance();
+        this.randomizer = new Random();
     }
 
     public void handleSlashEvent(SlackSlashEvent event) {
         final String query = event.getText();
         final String userId = event.getUserId();
+
+        if (event.getText().contains("https://onoffapp.slack.com/archives")) {
+            deleteMessage(event.getText());
+            return;
+        }
 
         final String url = giphyClient.findRandomGifByQuery(query);
         userUrlMap.put(userId, new QueryUrlResult(query, url));
@@ -67,7 +95,27 @@ public class SlackService {
 
         if (Objects.equals(action, ActionValue.SEND.name())) {
             final QueryUrlResult userQueryResult = userUrlMap.get(userId);
-            final List<LayoutBlock> message = constructMessage(userQueryResult.getQuery(), userQueryResult.getUrl(), MessageType.CHANNEL);
+            List<LayoutBlock> message = constructMessage(userQueryResult.getQuery(), userQueryResult.getUrl(), MessageType.CHANNEL);
+
+            final int luck = randomizer.nextInt(99);
+            final boolean switcheroo = (luck > SWITCHEROO_CHANCE) && (TARGET_CHANNELS.contains(event.getChannel().getId()) || TARGET_KEYWORDS.contains(userQueryResult.getQuery()));
+            if (switcheroo) {
+                final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
+                final String replacementUrl = giphyClient.findRandomGifByQuery(replacementQuery);
+                message = constructMessage(userQueryResult.getQuery(), replacementUrl, MessageType.CHANNEL);
+
+                LogManager.getLogger(getClass())
+                        .info(MessageFormat.format("Replacing keyword \"{0}\" with \"{1}\" because: luck: {2} > {3}, in target channel: {4}, target keyword: {5}",
+                                        userQueryResult.getQuery(),
+                                        replacementQuery,
+                                        luck,
+                                        SWITCHEROO_CHANCE,
+                                        TARGET_CHANNELS.contains(event.getChannel().getId()),
+                                        TARGET_KEYWORDS.contains(userQueryResult.getQuery())
+                                )
+                        );
+            }
+
             postChatMessage(message, event.getChannel().getId());
             postWebhook(responseUrl, ActionType.DELETE_ORIGINAL, null);
             return;
@@ -118,9 +166,24 @@ public class SlackService {
                     .unfurlMedia(true)
                     .text("sample text")
                     .username("Giphy")
-                    .iconUrl("https://ca.slack-edge.com/T04TY1N9S-UU2LZLZBN-f7c9fa36e6eb-512")
                     .iconEmoji(":yep:")
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
+            );
+        } catch (IOException | SlackApiException e) {
+            throw new RuntimeException("Slack API fucked up");
+        }
+    }
+
+    private void deleteMessage(String text) {
+        final String[] channelAndTs = text.replace("https://onoffapp.slack.com/archives/", "").split("/");
+        final String channel = channelAndTs[0];
+
+        StringBuilder ts = new StringBuilder(channelAndTs[1].substring(1));
+        ts.insert(ts.length() - 6, ".");
+        try {
+            slack.methods(SlackService.BOT_TOKEN).chatDelete(req -> req
+                    .channel(channel)
+                    .ts(String.valueOf(ts))
             );
         } catch (IOException | SlackApiException e) {
             throw new RuntimeException("Slack API fucked up");
