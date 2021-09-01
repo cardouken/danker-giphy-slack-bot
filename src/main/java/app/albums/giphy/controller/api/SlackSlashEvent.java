@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SlackSlashCommand {
+public class SlackSlashEvent {
 
     private String token;
     private String command;
@@ -35,7 +35,7 @@ public class SlackSlashCommand {
         return token;
     }
 
-    public SlackSlashCommand setToken(String token) {
+    public SlackSlashEvent setToken(String token) {
         this.token = token;
         return this;
     }
@@ -44,7 +44,7 @@ public class SlackSlashCommand {
         return command;
     }
 
-    public SlackSlashCommand setCommand(String command) {
+    public SlackSlashEvent setCommand(String command) {
         this.command = command;
         return this;
     }
@@ -53,7 +53,7 @@ public class SlackSlashCommand {
         return text;
     }
 
-    public SlackSlashCommand setText(String text) {
+    public SlackSlashEvent setText(String text) {
         this.text = text;
         return this;
     }
@@ -62,7 +62,7 @@ public class SlackSlashCommand {
         return teamId;
     }
 
-    public SlackSlashCommand setTeamId(String teamId) {
+    public SlackSlashEvent setTeamId(String teamId) {
         this.teamId = teamId;
         return this;
     }
@@ -71,7 +71,7 @@ public class SlackSlashCommand {
         return teamDomain;
     }
 
-    public SlackSlashCommand setTeamDomain(String teamDomain) {
+    public SlackSlashEvent setTeamDomain(String teamDomain) {
         this.teamDomain = teamDomain;
         return this;
     }
@@ -80,7 +80,7 @@ public class SlackSlashCommand {
         return channelId;
     }
 
-    public SlackSlashCommand setChannelId(String channelId) {
+    public SlackSlashEvent setChannelId(String channelId) {
         this.channelId = channelId;
         return this;
     }
@@ -89,7 +89,7 @@ public class SlackSlashCommand {
         return channelName;
     }
 
-    public SlackSlashCommand setChannelName(String channelName) {
+    public SlackSlashEvent setChannelName(String channelName) {
         this.channelName = channelName;
         return this;
     }
@@ -98,7 +98,7 @@ public class SlackSlashCommand {
         return userId;
     }
 
-    public SlackSlashCommand setUserId(String userId) {
+    public SlackSlashEvent setUserId(String userId) {
         this.userId = userId;
         return this;
     }
@@ -107,7 +107,7 @@ public class SlackSlashCommand {
         return userName;
     }
 
-    public SlackSlashCommand setUserName(String userName) {
+    public SlackSlashEvent setUserName(String userName) {
         this.userName = userName;
         return this;
     }
@@ -116,7 +116,7 @@ public class SlackSlashCommand {
         return responseUrl;
     }
 
-    public SlackSlashCommand setResponseUrl(String responseUrl) {
+    public SlackSlashEvent setResponseUrl(String responseUrl) {
         this.responseUrl = responseUrl;
         return this;
     }

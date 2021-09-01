@@ -11,6 +11,6 @@ public class GiphyTest extends BaseTest {
 
     @Test
     public void test() {
-        giphyClient.search("cardo");
+        giphyClient.execute("cardo");
     }
 }
