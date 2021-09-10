@@ -7,6 +7,7 @@ import app.albums.giphy.controller.api.SlackListenerEvent;
 import app.albums.giphy.controller.api.SlackSlashEvent;
 import app.albums.giphy.enums.ActionType;
 import app.albums.giphy.enums.ActionValue;
+import app.albums.giphy.enums.EventType;
 import app.albums.giphy.enums.MessageType;
 import app.albums.giphy.pojo.QueryUrlResult;
 import app.albums.giphy.rest.api.giphy.GiphyClient;
@@ -79,8 +80,8 @@ public class SlackService {
         final String query = event.getText();
         final String userId = event.getUserId();
 
-        if (event.getText().contains("https://onoffapp.slack.com/archives")) {
-            deleteMessage(event.getText());
+        if (event.getText().contains("slack.com/archives")) {
+            deleteMessageByPermalink(event.getText());
             return;
         }
 
@@ -94,34 +95,27 @@ public class SlackService {
     public void handleButtonEvent(SlackButtonEvent event) {
         final String userId = event.getUser().getId();
         final String responseUrl = event.getResponseUrl();
-        final String action = event.getActions().get(0).getValue();
+        final String action = event.getAction().getValue();
+        final String channelId = event.getChannel().getId();
 
         if (Objects.equals(action, ActionValue.SEND.name())) {
             final QueryUrlResult userQueryResult = userUrlMap.get(userId);
-            List<LayoutBlock> message = constructMessage(userQueryResult.getQuery(), userQueryResult.getUrl(), MessageType.CHANNEL);
+            final String userQuery = userQueryResult.getQuery();
+
+            List<LayoutBlock> message = constructMessage(userQuery, userQueryResult.getUrl(), MessageType.CHANNEL);
 
             final int luck = randomizer.nextInt(100);
-            LogManager.getLogger(getClass()).info("luck: " + luck);
-            final boolean switcheroo = (luck > SWITCHEROO_CHANCE) && (TARGET_CHANNELS.contains(event.getChannel().getId()) || TARGET_KEYWORDS.contains(userQueryResult.getQuery()));
-            if (switcheroo) {
+            if (isEligibleForSwitcheroo(channelId, userQuery, luck)) {
                 final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
                 final String replacementUrl = giphyClient.findRandomGifByQuery(replacementQuery);
-                message = constructMessage(userQueryResult.getQuery(), replacementUrl, MessageType.CHANNEL);
 
-                LogManager.getLogger(getClass())
-                        .info(MessageFormat.format("Replacing keyword \"{0}\" with \"{1}\" because: luck: {2}% (over threshold of {3}%), in target channel: {4}, target keyword: {5}",
-                                        userQueryResult.getQuery(),
-                                        replacementQuery,
-                                        luck,
-                                        SWITCHEROO_CHANCE,
-                                        TARGET_CHANNELS.contains(event.getChannel().getId()),
-                                        TARGET_KEYWORDS.contains(userQueryResult.getQuery())
-                                )
-                        );
+                message = constructMessage(userQuery, replacementUrl, MessageType.CHANNEL);
+                logResult(channelId, userQuery, luck, replacementQuery);
             }
 
-            postChatMessage(message, event.getChannel().getId());
-            postWebhook(responseUrl, ActionType.DELETE_ORIGINAL, null);
+            logResult(null, userQuery, luck, null);
+
+            postChatMessage(message, channelId, responseUrl);
             return;
         }
 
@@ -130,7 +124,7 @@ public class SlackService {
             return;
         }
 
-        // User shuffled, get a new gif and replace the ephemeral message with the new one
+        // User shuffled, get a new gif and replace the ephemeral message with a new one
         final String url = giphyClient.findRandomGifByQuery(action);
         userUrlMap.put(userId, new QueryUrlResult(action, url));
         final List<LayoutBlock> message = constructMessage(action, url, MessageType.EPHEMERAL);
@@ -144,11 +138,18 @@ public class SlackService {
 
         final SlackListenerEvent.Event event = listenerEvent.getEvent();
         final SlackListenerEvent.Item item = event.getItem();
-        if (Objects.equals(event.getType(), "reaction_added") && Objects.equals(event.getReaction(), "monkas")) {
-            deleteMessage(item.getChannel(), item.getTs());
+        if (event.getType() == EventType.REACTION_ADDED && Objects.equals(event.getReaction(), "monkas")) {
+            deleteMessageByReaction(item.getChannel(), item.getTs());
         }
 
         return new SlackEventResponse();
+    }
+
+    private boolean isEligibleForSwitcheroo(String channelId, String userQuery, int luck) {
+        if (luck > SWITCHEROO_CHANCE) {
+            return TARGET_CHANNELS.contains(channelId) || TARGET_KEYWORDS.contains(userQuery);
+        }
+        return false;
     }
 
     private void postWebhook(String responseUrl, ActionType action, List<LayoutBlock> message) {
@@ -173,11 +174,11 @@ public class SlackService {
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
             );
         } catch (IOException | SlackApiException e) {
-            throw new RuntimeException("Slack API fucked up");
+            throw new RuntimeException("Slack API done goofed");
         }
     }
 
-    private void postChatMessage(List<LayoutBlock> layoutBlocks, String channel) {
+    private void postChatMessage(List<LayoutBlock> layoutBlocks, String channel, String responseUrl) {
         try {
             slack.methods(SlackService.BOT_TOKEN).chatPostMessage(req -> req
                     .channel(channel)
@@ -186,23 +187,25 @@ public class SlackService {
                     .username("giphy")
                     .blocks(Optional.ofNullable(layoutBlocks).orElse(null))
             );
+
+            postWebhook(responseUrl, ActionType.DELETE_ORIGINAL, null);
         } catch (IOException | SlackApiException e) {
-            throw new RuntimeException("Slack API fucked up");
+            throw new RuntimeException("Slack API done goofed");
         }
     }
 
-    private void deleteMessage(String channelId, String ts) {
+    private void deleteMessageByReaction(String channelId, String ts) {
         try {
             slack.methods(SlackService.BOT_TOKEN).chatDelete(req -> req
                     .channel(channelId)
                     .ts(String.valueOf(ts))
             );
         } catch (IOException | SlackApiException e) {
-            throw new RuntimeException("Slack API fucked up or don't have enough permissions to delete the message");
+            throw new RuntimeException("Slack API done goofed up or we don't have enough permissions to delete the message");
         }
     }
 
-    private void deleteMessage(String text) {
+    private void deleteMessageByPermalink(String text) {
         final String[] channelAndTs = text.replace("https://onoffapp.slack.com/archives/", "").split("/");
         final String channel = channelAndTs[0];
 
@@ -214,7 +217,7 @@ public class SlackService {
                     .ts(String.valueOf(ts))
             );
         } catch (IOException | SlackApiException e) {
-            throw new RuntimeException("Slack API fucked up");
+            throw new RuntimeException("Slack API done goofed up or we don't have enough permissions to delete the message");
         }
     }
 
@@ -269,5 +272,27 @@ public class SlackService {
         }
 
         return layoutBlocks;
+    }
+
+    private void logResult(String channelId, String userQuery, int luck, String replacementQuery) {
+        if (channelId == null) {
+            LogManager.getLogger(getClass())
+                    .info(MessageFormat.format("Didn't replace keyword \"{0}\" because luck {1}% under threshold of {2}%",
+                            userQuery,
+                            luck,
+                            SWITCHEROO_CHANCE
+                    ));
+            return;
+        }
+
+        LogManager.getLogger(getClass())
+                .info(MessageFormat.format("Replacing keyword \"{0}\" with \"{1}\" because: luck: {2}% (over threshold of {3}%), in target channel: {4}, target keyword: {5}",
+                        userQuery,
+                        replacementQuery,
+                        luck,
+                        SWITCHEROO_CHANCE,
+                        TARGET_CHANNELS.contains(channelId),
+                        TARGET_KEYWORDS.contains(userQuery)
+                ));
     }
 }

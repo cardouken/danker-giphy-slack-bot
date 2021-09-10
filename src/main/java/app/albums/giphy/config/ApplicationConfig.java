@@ -2,6 +2,7 @@ package app.albums.giphy.config;
 
 import app.albums.giphy.config.util.JsonUtility;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -11,10 +12,15 @@ import java.util.List;
 
 @EnableWebMvc
 @Configuration
-public class ApplicationConfiguration implements WebMvcConfigurer {
+public class ApplicationConfig implements WebMvcConfigurer {
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(new MappingJackson2HttpMessageConverter(JsonUtility.getObjectMapper()));
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new StringToEventTypeConverter());
     }
 }
