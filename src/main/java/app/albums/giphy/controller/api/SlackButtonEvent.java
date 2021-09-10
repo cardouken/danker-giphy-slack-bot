@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Optional;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SlackButtonEvent {
@@ -102,6 +103,10 @@ public class SlackButtonEvent {
     public SlackButtonEvent setActions(List<Action> actions) {
         this.actions = actions;
         return this;
+    }
+
+    public Action getAction() {
+        return Optional.ofNullable(getActions().get(0)).orElseThrow(() -> new RuntimeException("Action not found!"));
     }
 
     public Channel getChannel() {
