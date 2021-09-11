@@ -44,7 +44,7 @@ import java.util.Set;
 public class SlackService {
 
     private static final String BOT_TOKEN = System.getenv("SLACK_BOT_TOKEN");
-    private static final int SWITCHEROO_CHANCE = 65; // % chance of the gif being replaced
+    private static final int SWITCHEROO_CHANCE = 100; // % chance of the gif being replaced
     private static final List<String> TARGET_CHANNELS = List.of(
             "C04TY1NEN", // #general
             "C04TY1NEW", // #random
