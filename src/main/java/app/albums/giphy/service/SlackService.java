@@ -105,15 +105,12 @@ public class SlackService {
             List<LayoutBlock> message = constructMessage(userQuery, userQueryResult.getUrl(), MessageType.CHANNEL);
 
             final int luck = randomizer.nextInt(100);
+            final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
             if (isEligibleForSwitcheroo(channelId, userQuery, luck)) {
-                final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
                 final String replacementUrl = giphyClient.findRandomGifByQuery(replacementQuery);
-
                 message = constructMessage(userQuery, replacementUrl, MessageType.CHANNEL);
-                logResult(channelId, userQuery, luck, replacementQuery);
             }
-
-            logResult(null, userQuery, luck, null);
+            logResult(channelId, userQuery, luck, replacementQuery);
 
             postChatMessage(message, channelId, responseUrl);
             return;
@@ -275,7 +272,7 @@ public class SlackService {
     }
 
     private void logResult(String channelId, String userQuery, int luck, String replacementQuery) {
-        if (channelId == null) {
+        if (luck < SWITCHEROO_CHANCE) {
             LogManager.getLogger(getClass())
                     .info(MessageFormat.format("Didn't replace keyword \"{0}\" because luck {1}% under threshold of {2}%",
                             userQuery,
