@@ -1,6 +1,5 @@
 package app.albums.giphy.controller.api;
 
-import app.albums.giphy.enums.EventType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,15 +29,15 @@ public class SlackListenerEvent {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Event {
 
-        private EventType type;
+        private String type;
         private Item item;
         private String reaction;
 
-        public EventType getType() {
+        public String getType() {
             return type;
         }
 
-        public Event setType(EventType type) {
+        public Event setType(String type) {
             this.type = type;
             return this;
         }
