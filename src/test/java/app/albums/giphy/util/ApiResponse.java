@@ -47,6 +47,12 @@ public class ApiResponse {
         return this;
     }
 
+    public ApiResponse assertThatContains(String path, String expectedContains) {
+        String s = (String)Objects.requireNonNull(this.json.getString(path), "Could not find object at path: " + path);
+        Assert.assertTrue(s + " didn't contain: " + expectedContains, s.contains(expectedContains));
+        return this;
+    }
+
     public ApiResponse print() {
         LogManager.getLogger("test").info(this.json.prettify());
         return this;

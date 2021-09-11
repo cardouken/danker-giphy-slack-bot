@@ -1,7 +1,11 @@
 package app.albums.giphy;
 
+import app.albums.giphy.builders.CreateSlackButtonEventBuilder;
 import app.albums.giphy.builders.CreateSlackSlashEventBuilder;
+import app.albums.giphy.builders.CreateUserBuilder;
+import app.albums.giphy.controller.api.SlackButtonEvent;
 import app.albums.giphy.mock.GiphyClientMock;
+import app.albums.giphy.mock.MainMock;
 import app.albums.giphy.mock.MethodsClientMock;
 import app.albums.giphy.service.SlackService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +27,23 @@ public class BaseTest {
     protected GiphyClientMock giphyClientMock;
 
     @Autowired
+    private MainMock mainMock;
+
+    @Autowired
     private SlackService slackService;
 
     public CreateSlackSlashEventBuilder createSlashEvent(String text) {
         return new CreateSlackSlashEventBuilder(slackService)
-                .setText(text);
+                .text(text);
+    }
+
+    public CreateUserBuilder createUser() {
+        return new CreateUserBuilder(mainMock);
+    }
+
+    public CreateSlackButtonEventBuilder createButtonEvent(SlackButtonEvent.User user) {
+        return new CreateSlackButtonEventBuilder(slackService)
+                .setUser(user);
     }
 
 }
