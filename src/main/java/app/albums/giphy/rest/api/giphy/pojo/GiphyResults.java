@@ -2,6 +2,17 @@ package app.albums.giphy.rest.api.giphy.pojo;
 
 public class GiphyResults {
 
+    private Images images;
+
+    public Images getImages() {
+        return images;
+    }
+
+    public GiphyResults setImages(Images images) {
+        this.images = images;
+        return this;
+    }
+
     public static class Data {
 
         private Images images;

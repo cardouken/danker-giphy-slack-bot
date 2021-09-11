@@ -8,13 +8,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GiphyQueryResponse {
 
-    private List<GiphyResults.Data> data;
+    private List<GiphyResults> data;
 
-    public List<GiphyResults.Data> getData() {
+    public List<GiphyResults> getData() {
         return data;
     }
 
-    public GiphyQueryResponse setData(List<GiphyResults.Data> data) {
+    public GiphyQueryResponse setData(List<GiphyResults> data) {
         this.data = data;
         return this;
     }

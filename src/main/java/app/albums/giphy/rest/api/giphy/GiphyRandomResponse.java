@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GiphyRandomResponse {
 
-    private GiphyResults.Data data;
+    private GiphyResults data;
 
-    public GiphyResults.Data getData() {
+    public GiphyResults getData() {
         return data;
     }
 
-    public GiphyRandomResponse setData(GiphyResults.Data data) {
+    public GiphyRandomResponse setData(GiphyResults data) {
         this.data = data;
         return this;
     }
