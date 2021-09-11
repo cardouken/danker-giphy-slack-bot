@@ -1,22 +1,6 @@
-package app.albums.giphy.rest.api.giphy;
+package app.albums.giphy.rest.api.giphy.pojo;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class GiphyGifResponse {
-
-    private List<Data> data;
-
-    public List<Data> getData() {
-        return data;
-    }
-
-    public GiphyGifResponse setData(List<Data> data) {
-        this.data = data;
-        return this;
-    }
+public class GiphyResults {
 
     public static class Data {
 
@@ -83,4 +67,5 @@ public class GiphyGifResponse {
             return this;
         }
     }
+
 }

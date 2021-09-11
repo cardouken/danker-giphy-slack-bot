@@ -29,6 +29,7 @@ public class JsonUtility {
 
     private static final String DATETIME_JSON_FORMAT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     private static final ObjectMapper objectMapper;
+    private static final ObjectMapper nullMapper;
 
     private static class BigDecimalModule extends SimpleModule {
         public BigDecimalModule() {
@@ -70,6 +71,17 @@ public class JsonUtility {
         objectMapper.setDateFormat(simpleDateFormat);
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
         objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
+
+        nullMapper = new ObjectMapper();
+        nullMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+        nullMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        nullMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+        nullMapper.registerModule(jdk8Module);
+        nullMapper.registerModule(javaTimeModule);
+        nullMapper.setDateFormat(simpleDateFormat);
+        nullMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
+        nullMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     }
 
     public static String toJson(Object object) {
@@ -91,6 +103,10 @@ public class JsonUtility {
 
     public static ObjectMapper getObjectMapper() {
         return objectMapper;
+    }
+
+    public static ObjectMapper getNullMapper() {
+        return nullMapper;
     }
 
 }
