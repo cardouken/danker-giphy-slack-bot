@@ -1,23 +1,26 @@
 package app.albums.giphy.rest.api.giphy;
 
-import org.apache.logging.log4j.LogManager;
+import app.albums.giphy.config.util.JsonUtility;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriTemplate;
 
 import java.net.URI;
 import java.text.MessageFormat;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 @Service
 public class GiphyClient {
 
-    private static final String BASE_URI = "https://api.giphy.com/v1/gifs/search";
+    private static final String BASE_URI = "https://api.giphy.com/v1/gifs";
     private static final String API_KEY = System.getenv("GIPHY_API_KEY");
+    private static final MapType MAP_TYPE = TypeFactory.defaultInstance().constructMapType(HashMap.class, String.class, Object.class);
 
     private final RestTemplate giphyRestTemplate;
 
@@ -25,51 +28,52 @@ public class GiphyClient {
         this.giphyRestTemplate = giphyRestTemplate;
     }
 
-    public String findRandomGifByQuery(String query) {
-        final GiphyGifResponse results = execute(query);
-        final int bound = results.getData().size();
-        return results.getData()
-                .get(new Random().nextInt(bound))
-                .getImages()
-                .getDownsized()
-                .getUrl();
+    public String getRandomGifUrlByQuery(String query) {
+        final GiphyQueryResponse results = executeGet("/search?&q={q}", Map.of("q", query), GiphyQueryResponse.class);
+        if (results.getData().size() < 1) {
+            return getRandomGifUrl();
+        }
+
+        return results.getData().stream()
+                .findAny()
+                .map(data -> data.getImages().getDownsized().getUrl())
+                .orElse(getRandomGifUrl());
     }
 
-    public GiphyGifResponse execute(String query) {
-        final Map<String, String> requestParams = Map.ofEntries(
-                Map.entry("api_key", API_KEY),
-                Map.entry("q", query)
-        );
-        final URI uri = giphyRestTemplate.getUriTemplateHandler()
-                .expand(BASE_URI + "?api_key={api_key}&q={q}", requestParams);
+    public String getRandomGifUrl() {
+        final GiphyRandomResponse results = executeGet("/random?&rating=g", Map.of(), GiphyRandomResponse.class);
+        return results.getData().getImages().getOriginal().getUrl();
+    }
 
+    private <T> T executeGet(String endpoint, Object request, Class<T> responseClass) {
+        final Map<String, Object> params = JsonUtility.getNullMapper().convertValue(request, MAP_TYPE);
+        final URI uri = new UriTemplate(BASE_URI + endpoint + "&api_key=" + API_KEY).expand(params);
         final RequestEntity<Void> requestEntity = RequestEntity.get(uri).build();
-        final ResponseEntity<GiphyGifResponse> response = giphyRestTemplate.exchange(requestEntity, GiphyGifResponse.class);
 
-        if (response.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+        return execute(endpoint, requestEntity, responseClass);
+    }
+
+    private <T, R> T execute(String endpoint, RequestEntity<R> requestEntity, Class<T> responseClass) {
+        final ResponseEntity<T> exchange = giphyRestTemplate.exchange(requestEntity, responseClass);
+
+        if (exchange.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
             throw new RuntimeException("Giphy request limit exceeded! Try again later.");
         }
-        if (!response.getStatusCode().is2xxSuccessful()) {
+        if (!exchange.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException(
                     MessageFormat.format(
                             "Unsuccessful response: {0} received from Giphy at endpoint {1} with response: {2}",
-                            response.getStatusCodeValue(),
-                            uri,
-                            response.getBody()
+                            exchange.getStatusCodeValue(),
+                            endpoint,
+                            exchange.getBody()
                     )
             );
         }
-        if (response.getBody() == null) {
+        if (exchange.getBody() == null) {
             throw new RuntimeException("No body received in Giphy response!");
         }
 
-        final List<GiphyGifResponse.Data> results = response.getBody().getData();
-        if (results.size() < 1) {
-            LogManager.getLogger(getClass()).info("couldn't find any gifs with query, using placeholder instead");
-            return execute("giphy");
-        }
-
-        return response.getBody();
+        return exchange.getBody();
     }
 
 }

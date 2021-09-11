@@ -85,7 +85,7 @@ public class SlackService {
             return;
         }
 
-        final String url = giphyClient.findRandomGifByQuery(query);
+        final String url = giphyClient.getRandomGifUrlByQuery(query);
         userUrlMap.put(userId, new QueryUrlResult(query, url));
 
         final List<LayoutBlock> message = constructMessage(query, url, MessageType.EPHEMERAL);
@@ -107,7 +107,7 @@ public class SlackService {
             final int luck = randomizer.nextInt(100);
             final String replacementQuery = REPLACEMENT_KEYWORDS.get(randomizer.nextInt(REPLACEMENT_KEYWORDS.size()));
             if (isEligibleForSwitcheroo(channelId, userQuery, luck)) {
-                final String replacementUrl = giphyClient.findRandomGifByQuery(replacementQuery);
+                final String replacementUrl = giphyClient.getRandomGifUrlByQuery(replacementQuery);
                 message = constructMessage(userQuery, replacementUrl, MessageType.CHANNEL);
             }
             logResult(channelId, userQuery, luck, replacementQuery);
@@ -122,7 +122,7 @@ public class SlackService {
         }
 
         // User shuffled, get a new gif and replace the ephemeral message with a new one
-        final String url = giphyClient.findRandomGifByQuery(action);
+        final String url = giphyClient.getRandomGifUrlByQuery(action);
         userUrlMap.put(userId, new QueryUrlResult(action, url));
         final List<LayoutBlock> message = constructMessage(action, url, MessageType.EPHEMERAL);
         postWebhook(responseUrl, ActionType.REPLACE_ORIGINAL, message);
