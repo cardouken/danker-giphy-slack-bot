@@ -24,4 +24,5 @@ The real Giphy integration will also post as the user whereas this bot will post
 * Configure an emoji and if the emoji is used to react to the post, the bot will delete its post. The default emoji which deletes messages in this implementation is `:monkas:` for when it gets a bit too real.
 
 # Demo
-![Demo](https://uustal.ee/giphy/giphy-demo.gif)
+![Demo](/src/main/resources/giphy-demo.gif)
+
